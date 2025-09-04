@@ -4,10 +4,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "Titles")
 public class Title {
@@ -22,10 +25,4 @@ public class Title {
 
     @Column(name = "title_description", columnDefinition = "TEXT")
     private String description;
-
-    @Builder
-    public Title(String name, String description) {
-        this.name = name;
-        this.description = description;
-    }
 }
