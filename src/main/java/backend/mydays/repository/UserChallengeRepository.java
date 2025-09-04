@@ -20,4 +20,6 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
 
     Optional<UserChallenge> findByPost(Post post);
     Optional<UserChallenge> findByUserAndChallenge(Users user, Challenge challenge);
+
+    Optional<UserChallenge> findByUserAndCompletedAt(Users user, LocalDate completedAt);
 }
