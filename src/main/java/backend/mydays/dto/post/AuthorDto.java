@@ -5,12 +5,12 @@ import lombok.Getter;
 
 @Getter
 public class AuthorDto {
-    private Long userId;
+    private String userId;
     private String nickname;
     private String avatarImageUrl;
     private ActiveTitleDto activeTitle;
 
-    public AuthorDto(Long userId, String nickname, String avatarImageUrl, ActiveTitleDto activeTitle) {
+    public AuthorDto(String userId, String nickname, String avatarImageUrl, ActiveTitleDto activeTitle) {
         this.userId = userId;
         this.nickname = nickname;
         this.avatarImageUrl = avatarImageUrl;
@@ -19,7 +19,7 @@ public class AuthorDto {
 
     public static AuthorDto from(Users user) {
         return new AuthorDto(
-                user.getId(),
+                String.valueOf(user.getId()),
                 user.getNickname(),
                 user.getAvatarImageUrl(),
                 ActiveTitleDto.from(user.getActiveTitle())
