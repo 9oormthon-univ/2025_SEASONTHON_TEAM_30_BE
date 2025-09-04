@@ -1,6 +1,7 @@
 package backend.mydays.config.data;
 
 import backend.mydays.domain.*;
+import backend.mydays.domain.Character;
 import backend.mydays.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -25,9 +26,23 @@ public class DataInitializer implements CommandLineRunner {
     private final TitleRepository titleRepository;
     private final UserTitleRepository userTitleRepository;
     private final UserChallengeRepository userChallengeRepository;
+    private final CharacterRepository characterRepository;
 
     @Override
     public void run(String... args) throws Exception {
+        // 0. Create Characters
+        createCharacterIfNotFound("새싹", 1, "/images/sprout_lv1.png");
+        createCharacterIfNotFound("새싹", 2, "/images/sprout_lv2.png");
+        createCharacterIfNotFound("불꽃", 3, "/images/flame_lv3.png");
+        createCharacterIfNotFound("물방울", 3, "/images/droplet_lv3.png");
+        createCharacterIfNotFound("풀잎", 3, "/images/leaf_lv3.png");
+        createCharacterIfNotFound("불꽃", 4, "/images/flame_lv4.png");
+        createCharacterIfNotFound("물방울", 4, "/images/droplet_lv4.png");
+        createCharacterIfNotFound("풀잎", 4, "/images/leaf_lv4.png");
+        createCharacterIfNotFound("불꽃", 5, "/images/flame_lv5.png");
+        createCharacterIfNotFound("물방울", 5, "/images/droplet_lv5.png");
+        createCharacterIfNotFound("풀잎", 5, "/images/leaf_lv5.png");
+
         // 1. Create Users
         Users user1 = createUserIfNotFound("test@test.com", "테스트유저", "password");
         Users user2 = createUserIfNotFound("user2@example.com", "챌린지마스터", "password");
@@ -102,6 +117,9 @@ public class DataInitializer implements CommandLineRunner {
                     .email(email)
                     .password(passwordEncoder.encode(password))
                     .build();
+            Character defaultCharacter = characterRepository.findByLevel(1)
+                    .orElseThrow(() -> new RuntimeException("Level 1 character not found!"));
+            newUser.setCharacter(defaultCharacter);
             return userRepository.save(newUser);
         });
     }
@@ -181,6 +199,17 @@ public class DataInitializer implements CommandLineRunner {
                     .completedAt(challenge.getChallengeDate())
                     .build();
             return userChallengeRepository.save(newUserChallenge);
+        });
+    }
+
+    private Character createCharacterIfNotFound(String name, int level, String imageUrl) {
+        return characterRepository.findByNameAndLevel(name, level).orElseGet(() -> {
+            Character newCharacter = Character.builder()
+                    .name(name)
+                    .level(level)
+                    .imageUrl(imageUrl)
+                    .build();
+            return characterRepository.save(newCharacter);
         });
     }
 }

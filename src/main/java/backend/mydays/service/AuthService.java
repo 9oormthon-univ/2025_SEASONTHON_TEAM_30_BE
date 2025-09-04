@@ -6,6 +6,8 @@ import backend.mydays.dto.auth.LoginResponse;
 import backend.mydays.dto.auth.SignUpRequest;
 import backend.mydays.dto.auth.SignUpResponse;
 import backend.mydays.config.jwt.JwtProvider;
+import backend.mydays.domain.Character;
+import backend.mydays.repository.CharacterRepository;
 import backend.mydays.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
+    private final CharacterRepository characterRepository;
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
@@ -38,6 +41,10 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
+
+        Character defaultCharacter = characterRepository.findByLevel(1)
+                .orElseThrow(() -> new RuntimeException("Level 1 character not found!"));
+        user.setCharacter(defaultCharacter);
 
         Users savedUser = userRepository.save(user);
         return SignUpResponse.from(savedUser);

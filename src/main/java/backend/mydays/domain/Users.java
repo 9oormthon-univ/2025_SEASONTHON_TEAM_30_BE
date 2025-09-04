@@ -30,7 +30,9 @@ public class Users {
     @Column(nullable = false)
     private String password;
 
-    private String avatarImageUrl;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "character_id")
+    private Character character;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "active_title_id")
@@ -58,5 +60,13 @@ public class Users {
 
     public void updateActiveTitle(Title title) {
         this.activeTitle = title;
+    }
+
+    public void setCharacter(Character character) {
+        this.character = character;
+    }
+
+    public String getAvatarImageUrl() {
+        return this.character != null ? this.character.getImageUrl() : null;
     }
 }
