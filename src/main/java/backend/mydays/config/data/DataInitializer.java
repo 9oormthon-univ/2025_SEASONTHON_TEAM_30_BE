@@ -104,9 +104,9 @@ public class DataInitializer implements CommandLineRunner {
 		createCommentIfNotFound(post5, user1, "감사일기 좋은 습관이죠!");
 
 		// 7. Create Titles
-		Title title1 = createTitleIfNotFound("첫 걸음", "하루 챌린지를 처음 시작한 사용자");
-		Title title2 = createTitleIfNotFound("꾸준함의 아이콘", "7일 연속 챌린지 성공");
-		Title title3 = createTitleIfNotFound("챌린지 마스터", "30일 연속 챌린지 성공");
+		Title title1 = createTitleIfNotFound("첫 걸음", "하루 챌린지를 처음 시작한 사용자", "#FFD700");
+		Title title2 = createTitleIfNotFound("꾸준함의 아이콘", "7일 연속 챌린지 성공", "#00BFFF");
+		Title title3 = createTitleIfNotFound("챌린지 마스터", "30일 연속 챌린지 성공", "#FF69B4");
 
 		// 8. Assign User Titles
 		createUserTitleIfNotFound(user1, title1);
@@ -182,11 +182,12 @@ public class DataInitializer implements CommandLineRunner {
 		});
 	}
 
-	private Title createTitleIfNotFound(String name, String description) {
+	private Title createTitleIfNotFound(String name, String description, String color) {
 		return titleRepository.findByName(name).orElseGet(() -> {
 			Title newTitle = Title.builder()
 				.name(name)
 				.description(description)
+				.color(color)
 				.build();
 			return titleRepository.save(newTitle);
 		});

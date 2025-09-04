@@ -2,10 +2,7 @@ package backend.mydays.controller;
 
 import backend.mydays.dto.common.BaseResponse;
 import backend.mydays.dto.common.PageResponseDto;
-import backend.mydays.dto.post.PostCreateRequest;
-import backend.mydays.dto.post.PostCreateResponse;
-import backend.mydays.dto.post.PostDetailResponseDto;
-import backend.mydays.dto.post.PostResponseDto;
+import backend.mydays.dto.post.*;
 import backend.mydays.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,56 +35,63 @@ public class PostController {
         // For now, we'll use a placeholder URL.
         String imageUrl = "https://example.com/images/" + image.getOriginalFilename(); // Placeholder
         Long postId = postService.createPost(request, userDetails.getUsername(), imageUrl);
-        return BaseResponse.created("게시물이 성공적으로 작성되었습니다.", new PostCreateResponse(postId));
+        return BaseResponse.created("게시물이 성공적으로 작성되었습니다.", new PostCreateResponse(String.valueOf(postId)));
     }
 
     @Operation(summary = "피드(게시물 목록) 조회", description = "다른 사람들이 올린 챌린지 게시물들을 최신순으로 조회합니다.")
     @GetMapping
-    public ResponseEntity<BaseResponse<PageResponseDto<PostResponseDto>>> getFeed(
+    public ResponseEntity<BaseResponse<PageResponseDto<FeedPostDto>>> getFeed(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        PageResponseDto<PostResponseDto> response = new PageResponseDto<>(postService.getFeed(pageable, userDetails.getUsername()));
+        PageResponseDto<FeedPostDto> response = new PageResponseDto<>(postService.getFeed(pageable, userDetails.getUsername()));
         return BaseResponse.ok("피드 조회에 성공했습니다.", response);
+    }
+
+    @Operation(summary = "게시물 작성화면 조회", description = "게시물 작성 화면에 필요한 오늘의 미션 내용을 조회합니다.")
+    @GetMapping("/mission")
+    public ResponseEntity<BaseResponse<MissionTextDto>> getMissionText() {
+        MissionTextDto response = postService.getMissionText();
+        return BaseResponse.ok("오늘의 미션 조회에 성공했습니다.", response);
     }
 
     @Operation(summary = "게시물 상세 조회", description = "특정 게시물의 상세 내용과 댓글들을 조회합니다.")
     @GetMapping("/{postId}")
-    public ResponseEntity<BaseResponse<PostDetailResponseDto>> getPostDetail(
-            @PathVariable Long postId,
+    public ResponseEntity<BaseResponse<PostDetailResponseWrapperDto>> getPostDetail(
+            @PathVariable String postId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        PostDetailResponseDto response = postService.getPostDetail(postId, userDetails.getUsername());
+        PostDetailResponseWrapperDto response = postService.getPostDetail(Long.parseLong(postId), userDetails.getUsername());
         return BaseResponse.ok("게시물 상세 조회에 성공했습니다.", response);
     }
 
     @Operation(summary = "게시물 삭제", description = "내가 작성한 게시물을 삭제합니다.")
-    @DeleteMapping("/{postId}")
+    @DeleteMapping
     public ResponseEntity<BaseResponse<Void>> deletePost(
-            @PathVariable Long postId,
+            @RequestBody PostIdRequestDto request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        postService.deletePost(postId, userDetails.getUsername());
+        postService.deletePost(Long.parseLong(request.getPostId()), userDetails.getUsername());
         return BaseResponse.ok("게시물이 삭제되었습니다.", null);
     }
 
     @Operation(summary = "게시물 좋아요", description = "다른 사람의 게시물에 '좋아요'를 누릅니다.")
-    @PostMapping("/{postId}/like")
+    @PostMapping("/like")
     public ResponseEntity<BaseResponse<Void>> likePost(
-            @PathVariable Long postId,
+            @RequestBody PostIdRequestDto request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        postService.likePost(postId, userDetails.getUsername());
+        postService.likePost(Long.parseLong(request.getPostId()), userDetails.getUsername());
         return BaseResponse.ok("게시물을 좋아합니다.", null);
     }
 
     @Operation(summary = "게시물 좋아요 취소", description = "다른 사람의 게시물에 '좋아요'를 취소합니다.")
-    @DeleteMapping("/{postId}/like")
+    @PostMapping("/unlike")
     public ResponseEntity<BaseResponse<Void>> unlikePost(
-            @PathVariable Long postId,
+            @RequestBody PostIdRequestDto request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        postService.unlikePost(postId, userDetails.getUsername());
+        postService.unlikePost(Long.parseLong(request.getPostId()), userDetails.getUsername());
         return BaseResponse.ok("게시물 좋아요를 취소했습니다.", null);
     }
 }

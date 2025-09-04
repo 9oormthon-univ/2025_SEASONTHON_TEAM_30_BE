@@ -2,9 +2,10 @@ package backend.mydays.controller;
 
 import backend.mydays.dto.common.BaseResponse;
 import backend.mydays.dto.mypage.ActiveTitleUpdateRequest;
-import backend.mydays.dto.mypage.MyCalendarResponse;
-import backend.mydays.dto.mypage.MyStatusResponse;
-import backend.mydays.dto.mypage.MyTitlesResponse;
+import backend.mydays.dto.mypage.MyCalendarResponseDto;
+import backend.mydays.dto.mypage.MyStatusResponseDto;
+import backend.mydays.dto.mypage.MyTitlesResponseDto;
+import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.service.MyPageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,34 +17,44 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "마이페이지", description = "개인 챌린지 활동 및 관리 API")
 @RestController
-@RequestMapping("/api/v1/me")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class MyPageController {
 
     private final MyPageService myPageService;
 
-    @Operation(summary = "나의 챌린지 현황 조회", description = "마이페이지에서 나의 프로필, 챌린지 통계, 칭호 정보를 조회합니다.")
-    @GetMapping("/status")
-    public ResponseEntity<BaseResponse<MyStatusResponse>> getMyStatus(@AuthenticationPrincipal UserDetails userDetails) {
-        MyStatusResponse response = myPageService.getMyStatus(userDetails.getUsername());
+    @Operation(summary = "나의 챌린지 현황 조회", description = "나의 프로필 정보, 챌린지 기록, 현재 캐릭터 정보를 조회합니다.")
+    @GetMapping("/me")
+    public ResponseEntity<BaseResponse<MyStatusResponseDto>> getMyStatus(@AuthenticationPrincipal UserDetails userDetails) {
+        MyStatusResponseDto response = myPageService.getMyStatus(userDetails.getUsername());
         return BaseResponse.ok("나의 챌린지 현황 조회에 성공했습니다.", response);
     }
 
     @Operation(summary = "나의 챌린지 달력 조회", description = "월별 달력 형태로 내가 챌린지를 수행한 날짜들을 확인합니다.")
     @GetMapping("/calendar")
-    public ResponseEntity<BaseResponse<MyCalendarResponse>> getMyCalendar(
+    public ResponseEntity<BaseResponse<MyCalendarResponseDto>> getMyCalendar(
             @RequestParam int year,
             @RequestParam int month,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        MyCalendarResponse response = myPageService.getMyCalendar(year, month, userDetails.getUsername());
+        MyCalendarResponseDto response = myPageService.getMyCalendar(year, month, userDetails.getUsername());
         return BaseResponse.ok("나의 챌린지 달력 조회에 성공했습니다.", response);
+    }
+
+    @Operation(summary = "특정 날짜의 내 게시물 조회", description = "챌린지 달력에서 특정 날짜를 클릭하여 그날 내가 작성한 게시물을 조회합니다.")
+    @GetMapping("/posts/{date}")
+    public ResponseEntity<BaseResponse<PostDetailResponseWrapperDto>> getMyPostsByDate(
+            @PathVariable String date,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        PostDetailResponseWrapperDto response = myPageService.getMyPostByDate(date, userDetails.getUsername());
+        return BaseResponse.ok("특정 날짜의 내 게시물 조회에 성공했습니다.", response);
     }
 
     @Operation(summary = "보유 칭호 목록 조회", description = "내가 획득한 칭호 목록을 조회합니다.")
     @GetMapping("/titles")
-    public ResponseEntity<BaseResponse<MyTitlesResponse>> getMyTitles(@AuthenticationPrincipal UserDetails userDetails) {
-        MyTitlesResponse response = myPageService.getMyTitles(userDetails.getUsername());
+    public ResponseEntity<BaseResponse<MyTitlesResponseDto>> getMyTitles(@AuthenticationPrincipal UserDetails userDetails) {
+        MyTitlesResponseDto response = myPageService.getMyTitles(userDetails.getUsername());
         return BaseResponse.ok("보유 칭호 목록 조회에 성공했습니다.", response);
     }
 

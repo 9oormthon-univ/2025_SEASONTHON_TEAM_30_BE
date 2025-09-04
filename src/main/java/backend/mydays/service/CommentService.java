@@ -3,7 +3,6 @@ package backend.mydays.service;
 import backend.mydays.domain.Comment;
 import backend.mydays.domain.Post;
 import backend.mydays.domain.Users;
-import backend.mydays.dto.comment.CommentCreateRequest;
 import backend.mydays.dto.comment.CommentUpdateRequest;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
@@ -24,7 +23,7 @@ public class CommentService {
     private final UserRepository userRepository;
 
     @Transactional
-    public Long createComment(Long postId, CommentCreateRequest request, String userEmail) {
+    public Long createComment(Long postId, String content, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
         Post post = postRepository.findById(postId)
@@ -33,7 +32,7 @@ public class CommentService {
         Comment comment = Comment.builder()
                 .post(post)
                 .user(user)
-                .content(request.getContent())
+                .content(content)
                 .build();
 
         Comment savedComment = commentRepository.save(comment);

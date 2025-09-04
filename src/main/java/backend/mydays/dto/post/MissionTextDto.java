@@ -1,10 +1,10 @@
 package backend.mydays.dto.post;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @AllArgsConstructor
-public class PostCreateResponse {
-    private String postId;
+public class MissionTextDto {
+    private String missionText;
 }

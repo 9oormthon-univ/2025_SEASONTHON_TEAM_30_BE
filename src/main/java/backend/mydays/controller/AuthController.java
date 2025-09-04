@@ -2,6 +2,7 @@ package backend.mydays.controller;
 
 import backend.mydays.dto.auth.LoginRequest;
 import backend.mydays.dto.auth.LoginResponse;
+import backend.mydays.dto.auth.NicknameRequest;
 import backend.mydays.dto.auth.SignUpRequest;
 import backend.mydays.dto.auth.SignUpResponse;
 import backend.mydays.dto.common.BaseResponse;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,5 +38,23 @@ public class AuthController {
     public ResponseEntity<BaseResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return BaseResponse.ok("로그인에 성공했습니다.", response);
+    }
+
+    @Operation(summary = "로그아웃", description = "사용자를 로그아웃 처리합니다.")
+    @PostMapping("/logout")
+    public ResponseEntity<BaseResponse<Void>> logout() {
+        // In a real application, you would invalidate the token here.
+        // For now, we just return a success response.
+        return BaseResponse.ok("로그아웃 되었습니다.", null);
+    }
+
+    @Operation(summary = "닉네임 설정", description = "회원가입 후 닉네임을 설정합니다.")
+    @PostMapping("/nickname")
+    public ResponseEntity<BaseResponse<Void>> updateNickname(
+            @RequestBody NicknameRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        authService.updateNickname(userDetails.getUsername(), request.getNickName());
+        return BaseResponse.ok("닉네임 생성에 성공했습니다.", null);
     }
 }

@@ -219,3 +219,7 @@ $RECYCLE.BIN/
 # Custom ignored files
 api.md
 error.txt
+
+# Temporary ignore for commit
+GEMINI.md
+src/main/resources/application.yml

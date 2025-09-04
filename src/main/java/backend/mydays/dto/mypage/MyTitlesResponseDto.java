@@ -1,12 +1,12 @@
 package backend.mydays.dto.mypage;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
+@Data
 @AllArgsConstructor
-public class MyTitlesResponse {
-    private List<EarnedTitleDto> titles;
+public class MyTitlesResponseDto {
+    private List<TitleDto> titles;
 }

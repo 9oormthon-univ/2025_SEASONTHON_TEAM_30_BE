@@ -4,6 +4,7 @@ import backend.mydays.domain.Title;
 import backend.mydays.domain.UserChallenge;
 import backend.mydays.domain.Users;
 import backend.mydays.dto.mypage.*;
+import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.TitleRepository;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,14 +30,38 @@ public class MyPageService {
     private final UserChallengeRepository userChallengeRepository;
     private final UserTitleRepository userTitleRepository;
     private final TitleRepository titleRepository;
+    private final PostService postService; // Inject PostService
 
-    public MyStatusResponse getMyStatus(String userEmail) {
+    public MyStatusResponseDto getMyStatus(String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
-        return new MyStatusResponse(user);
+
+        // Placeholder values for new fields
+        String growthMessage = "오늘도 성장 중이에요!"; // Placeholder
+        boolean isBubbleVisible = true; // Placeholder
+        double progress = 0.5; // Placeholder
+        int totalChallengeCount = 42; // Placeholder
+        int daysCount = 7; // Placeholder
+        boolean isCompleteMission = false; // Placeholder
+
+        String userTitle = user.getActiveTitle() != null ? user.getActiveTitle().getName() : "";
+        String userTitleColor = user.getActiveTitle() != null ? user.getActiveTitle().getColor() : "#000000";
+
+        return new MyStatusResponseDto(
+                user.getNickname(),
+                growthMessage,
+                isBubbleVisible,
+                userTitle,
+                userTitleColor,
+                progress,
+                user.getAvatarImageUrl(), // This is now from Character
+                totalChallengeCount,
+                daysCount,
+                isCompleteMission
+        );
     }
 
-    public MyCalendarResponse getMyCalendar(int year, int month, String userEmail) {
+    public MyCalendarResponseDto getMyCalendar(int year, int month, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
@@ -44,22 +70,42 @@ public class MyPageService {
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         List<UserChallenge> challenges = userChallengeRepository.findByUserAndMonth(user, startDate, endDate);
-        List<CompletedPostDto> completedPosts = challenges.stream()
-                .map(CompletedPostDto::from)
+        List<CalendarPostDto> calendarPosts = challenges.stream()
+                .map(uc -> new CalendarPostDto(
+                        String.valueOf(uc.getPost().getId()),
+                        uc.getPost().getImageUrl(),
+                        uc.getPost().getCreatedAt()
+                ))
                 .collect(Collectors.toList());
 
-        return new MyCalendarResponse(year, month, completedPosts);
+        return new MyCalendarResponseDto(user.getCreatedAt(), calendarPosts);
     }
 
-    public MyTitlesResponse getMyTitles(String userEmail) {
+    public PostDetailResponseWrapperDto getMyPostByDate(String dateString, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
-        List<EarnedTitleDto> titles = userTitleRepository.findByUser(user).stream()
-                .map(EarnedTitleDto::from)
+        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+
+        UserChallenge userChallenge = userChallengeRepository.findByUserAndCompletedAt(user, date)
+                .orElseThrow(() -> new ResourceNotFoundException("UserChallenge", "date", dateString));
+
+        return postService.getPostDetail(userChallenge.getPost().getId(), userEmail);
+    }
+
+    public MyTitlesResponseDto getMyTitles(String userEmail) {
+        Users user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
+
+        List<TitleDto> titles = userTitleRepository.findByUser(user).stream()
+                .map(userTitle -> new TitleDto(
+                        String.valueOf(userTitle.getTitle().getId()),
+                        userTitle.getTitle().getName(),
+                        userTitle.getTitle().getColor()
+                ))
                 .collect(Collectors.toList());
 
-        return new MyTitlesResponse(titles);
+        return new MyTitlesResponseDto(titles);
     }
 
     @Transactional

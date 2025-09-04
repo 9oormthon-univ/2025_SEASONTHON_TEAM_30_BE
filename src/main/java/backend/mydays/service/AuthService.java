@@ -58,4 +58,15 @@ public class AuthService {
         String token = jwtProvider.generateToken(authentication.getName());
         return new LoginResponse(token);
     }
+
+    @Transactional
+    public void updateNickname(String email, String newNickname) {
+        if (userRepository.findByNickname(newNickname).isPresent()) {
+            throw new IllegalArgumentException("이미 사용중인 닉네임입니다.");
+        }
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setNickname(newNickname);
+        userRepository.save(user);
+    }
 }

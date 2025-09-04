@@ -1,6 +1,6 @@
 package backend.mydays.controller;
 
-import backend.mydays.dto.comment.CommentCreateRequest;
+import backend.mydays.dto.comment.CommentCreateRequestDto;
 import backend.mydays.dto.comment.CommentCreateResponse;
 import backend.mydays.dto.comment.CommentUpdateRequest;
 import backend.mydays.dto.common.BaseResponse;
@@ -22,13 +22,12 @@ public class CommentController {
     private final CommentService commentService;
 
     @Operation(summary = "댓글 생성", description = "특정 게시물에 댓글을 작성합니다.")
-    @PostMapping("/posts/{postId}/comments")
+    @PostMapping("/posts/comments")
     public ResponseEntity<BaseResponse<CommentCreateResponse>> createComment(
-            @PathVariable Long postId,
-            @RequestBody CommentCreateRequest request,
+            @RequestBody CommentCreateRequestDto request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        Long commentId = commentService.createComment(postId, request, userDetails.getUsername());
+        Long commentId = commentService.createComment(Long.parseLong(request.getPostId()), request.getContent(), userDetails.getUsername());
         return BaseResponse.created("댓글이 작성되었습니다.", new CommentCreateResponse(commentId));
     }
 

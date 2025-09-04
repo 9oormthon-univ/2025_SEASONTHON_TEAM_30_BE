@@ -25,4 +25,7 @@ public class Title {
 
     @Column(name = "title_description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "color", length = 7)
+    private String color;
 }

@@ -51,6 +51,15 @@ public class Users {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean likesNotification = true;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean commentsNotification = true;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean challengeReminderNotification = true;
+
     @Builder
     public Users(String nickname, String email, String password) {
         this.nickname = nickname;
@@ -68,5 +77,15 @@ public class Users {
 
     public String getAvatarImageUrl() {
         return this.character != null ? this.character.getImageUrl() : null;
+    }
+
+    public void updateNotificationSettings(boolean likesNotification, boolean commentsNotification, boolean challengeReminderNotification) {
+        this.likesNotification = likesNotification;
+        this.commentsNotification = commentsNotification;
+        this.challengeReminderNotification = challengeReminderNotification;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

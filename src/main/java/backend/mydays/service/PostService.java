@@ -1,10 +1,11 @@
 package backend.mydays.service;
 
 import backend.mydays.domain.*;
+import backend.mydays.dto.comment.CommentDto;
+import backend.mydays.dto.post.FeedPostDto;
+import backend.mydays.dto.post.MissionTextDto;
 import backend.mydays.dto.post.PostCreateRequest;
-import backend.mydays.dto.post.PostDetailResponseDto;
-import backend.mydays.dto.post.PostResponseDto;
-import backend.mydays.dto.comment.CommentResponseDto;
+import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.*;
@@ -58,25 +59,33 @@ public class PostService {
         return savedPost.getId();
     }
 
-    public Page<PostResponseDto> getFeed(Pageable pageable, String userEmail) {
+    public Page<FeedPostDto> getFeed(Pageable pageable, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
         Page<Post> posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
-        return posts.map(post -> toPostResponseDto(post, user));
+        return posts.map(post -> toFeedPostDto(post, user));
     }
 
-    public PostDetailResponseDto getPostDetail(Long postId, String userEmail) {
+    public MissionTextDto getMissionText() {
+        Challenge challenge = challengeRepository.findByChallengeDate(LocalDate.now())
+                .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
+        return new MissionTextDto(challenge.getContent());
+    }
+
+    public PostDetailResponseWrapperDto getPostDetail(Long postId, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
-        List<CommentResponseDto> comments = commentRepository.findAllByPost(post).stream()
-                .map(CommentResponseDto::new)
+        FeedPostDto postDto = toFeedPostDto(post, user);
+
+        List<CommentDto> comments = commentRepository.findAllByPost(post).stream()
+                .map(this::toCommentDto)
                 .collect(Collectors.toList());
 
-        return toPostDetailResponseDto(post, user, comments);
+        return new PostDetailResponseWrapperDto(postDto, comments);
     }
 
     @Transactional
@@ -127,17 +136,37 @@ public class PostService {
     }
 
 
-    private PostResponseDto toPostResponseDto(Post post, Users user) {
+    private FeedPostDto toFeedPostDto(Post post, Users user) {
         long likeCount = likeRepository.countByPost(post);
         long commentCount = commentRepository.countByPost(post);
         boolean isLiked = likeRepository.findByUserAndPost(user, post).isPresent();
-        return new PostResponseDto(post, likeCount, commentCount, isLiked);
+        Title activeTitle = post.getUser().getActiveTitle();
+
+        return new FeedPostDto(
+                String.valueOf(post.getId()),
+                post.getUser().getAvatarImageUrl(),
+                post.getUser().getNickname(),
+                activeTitle != null ? activeTitle.getName() : "",
+                activeTitle != null ? activeTitle.getColor() : "#000000",
+                post.getCreatedAt(),
+                post.getContent(),
+                post.getImageUrl(),
+                likeCount,
+                isLiked,
+                commentCount
+        );
     }
 
-    private PostDetailResponseDto toPostDetailResponseDto(Post post, Users user, List<CommentResponseDto> comments) {
-        long likeCount = likeRepository.countByPost(post);
-        long commentCount = commentRepository.countByPost(post);
-        boolean isLiked = likeRepository.findByUserAndPost(user, post).isPresent();
-        return new PostDetailResponseDto(post, likeCount, commentCount, isLiked, comments);
+    private CommentDto toCommentDto(Comment comment) {
+        Title activeTitle = comment.getUser().getActiveTitle();
+        return new CommentDto(
+                String.valueOf(comment.getId()),
+                comment.getUser().getAvatarImageUrl(),
+                comment.getUser().getNickname(),
+                activeTitle != null ? activeTitle.getName() : "",
+                activeTitle != null ? activeTitle.getColor() : "#000000",
+                comment.getCreatedAt(),
+                comment.getContent()
+        );
     }
 }
