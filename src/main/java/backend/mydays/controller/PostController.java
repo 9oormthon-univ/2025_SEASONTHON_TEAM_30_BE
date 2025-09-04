@@ -7,6 +7,8 @@ import backend.mydays.dto.post.PostCreateResponse;
 import backend.mydays.dto.post.PostDetailResponseDto;
 import backend.mydays.dto.post.PostResponseDto;
 import backend.mydays.service.PostService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@Tag(name = "게시물", description = "게시물 관련 API")
 @RestController
 @RequestMapping("/api/v1/posts")
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class PostController {
 
     private final PostService postService;
 
+    @Operation(summary = "게시물 생성", description = "오늘의 챌린지에 맞는 사진과 글을 업로드하여 게시물을 작성합니다.")
     @PostMapping
     public ResponseEntity<BaseResponse<PostCreateResponse>> createPost(
             @RequestPart("content") PostCreateRequest request,
@@ -37,6 +41,7 @@ public class PostController {
         return BaseResponse.created("게시물이 성공적으로 작성되었습니다.", new PostCreateResponse(postId));
     }
 
+    @Operation(summary = "피드(게시물 목록) 조회", description = "다른 사람들이 올린 챌린지 게시물들을 최신순으로 조회합니다.")
     @GetMapping
     public ResponseEntity<BaseResponse<PageResponseDto<PostResponseDto>>> getFeed(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
@@ -46,6 +51,7 @@ public class PostController {
         return BaseResponse.ok("피드 조회에 성공했습니다.", response);
     }
 
+    @Operation(summary = "게시물 상세 조회", description = "특정 게시물의 상세 내용과 댓글들을 조회합니다.")
     @GetMapping("/{postId}")
     public ResponseEntity<BaseResponse<PostDetailResponseDto>> getPostDetail(
             @PathVariable Long postId,
@@ -55,6 +61,7 @@ public class PostController {
         return BaseResponse.ok("게시물 상세 조회에 성공했습니다.", response);
     }
 
+    @Operation(summary = "게시물 삭제", description = "내가 작성한 게시물을 삭제합니다.")
     @DeleteMapping("/{postId}")
     public ResponseEntity<BaseResponse<Void>> deletePost(
             @PathVariable Long postId,
@@ -64,6 +71,7 @@ public class PostController {
         return BaseResponse.ok("게시물이 삭제되었습니다.", null);
     }
 
+    @Operation(summary = "게시물 좋아요", description = "다른 사람의 게시물에 '좋아요'를 누릅니다.")
     @PostMapping("/{postId}/like")
     public ResponseEntity<BaseResponse<Void>> likePost(
             @PathVariable Long postId,
@@ -73,6 +81,7 @@ public class PostController {
         return BaseResponse.ok("게시물을 좋아합니다.", null);
     }
 
+    @Operation(summary = "게시물 좋아요 취소", description = "다른 사람의 게시물에 '좋아요'를 취소합니다.")
     @DeleteMapping("/{postId}/like")
     public ResponseEntity<BaseResponse<Void>> unlikePost(
             @PathVariable Long postId,

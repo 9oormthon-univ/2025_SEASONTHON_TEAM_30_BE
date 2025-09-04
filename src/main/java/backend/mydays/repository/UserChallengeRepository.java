@@ -3,6 +3,7 @@ package backend.mydays.repository;
 import backend.mydays.domain.Post;
 import backend.mydays.domain.UserChallenge;
 import backend.mydays.domain.Users;
+import backend.mydays.domain.Challenge;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,4 +19,5 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
     List<UserChallenge> findByUserAndMonth(@Param("user") Users user, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     Optional<UserChallenge> findByPost(Post post);
+    Optional<UserChallenge> findByUserAndChallenge(Users user, Challenge challenge);
 }

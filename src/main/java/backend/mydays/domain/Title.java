@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
 
 @Entity
 @Getter
@@ -21,4 +22,10 @@ public class Title {
 
     @Column(name = "title_description", columnDefinition = "TEXT")
     private String description;
+
+    @Builder
+    public Title(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 }

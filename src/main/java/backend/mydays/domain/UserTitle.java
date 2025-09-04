@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -30,4 +31,11 @@ public class UserTitle {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime earnedAt;
+
+    @Builder
+    public UserTitle(Users user, Title title, LocalDateTime earnedAt) {
+        this.user = user;
+        this.title = title;
+        this.earnedAt = earnedAt;
+    }
 }
