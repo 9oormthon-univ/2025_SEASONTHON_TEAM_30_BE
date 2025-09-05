@@ -81,6 +81,22 @@ public class MyPageService {
         return new MyCalendarResponseDto(user.getCreatedAt(), calendarPosts);
     }
 
+    public MyCalendarResponseDto getAllMyChallenges(String userEmail) {
+        Users user = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
+
+        List<UserChallenge> challenges = userChallengeRepository.findByUser(user);
+        List<CalendarPostDto> calendarPosts = challenges.stream()
+            .map(uc -> new CalendarPostDto(
+                "post_" + uc.getPost().getId(),
+                uc.getPost().getImageUrl(),
+                uc.getPost().getCreatedAt()
+            ))
+            .collect(Collectors.toList());
+
+        return new MyCalendarResponseDto(user.getCreatedAt(), calendarPosts);
+    }
+
     public PostDetailResponseWrapperDto getMyPostByDate(String dateString, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));

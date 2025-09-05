@@ -67,4 +67,14 @@ public class MyPageController {
         myPageService.updateActiveTitle(request, userDetails.getUsername());
         return BaseResponse.ok("대표 칭호가 변경되었습니다.", null);
     }
+
+    @Operation(summary = "나의 모든 챌린지 게시물 조회", description = "유저가 수행한 모든 챌린지 게시물 목록을 조회합니다.")
+    @GetMapping("/calendar/all")
+    public ResponseEntity<BaseResponse<MyCalendarResponseDto>> getAllMyChallenges(
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        MyCalendarResponseDto response = myPageService.getAllMyChallenges(userDetails.getUsername());
+        return BaseResponse.ok("나의 모든 챌린지 게시물 조회에 성공했습니다.", response);
+    }
+
 }
