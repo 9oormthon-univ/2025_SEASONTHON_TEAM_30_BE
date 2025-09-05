@@ -1,16 +1,26 @@
 package backend.mydays.service;
 
+import backend.mydays.domain.Challenge;
+import backend.mydays.domain.Post;
 import backend.mydays.domain.Title;
 import backend.mydays.domain.UserChallenge;
 import backend.mydays.domain.Users;
+import backend.mydays.dto.comment.CommentDto;
 import backend.mydays.dto.mypage.*;
+import backend.mydays.dto.post.CalendarPostDetailResponseWrapperDto;
+import backend.mydays.dto.post.FeedPostDto;
+import backend.mydays.dto.post.MissionDateDto;
+import backend.mydays.dto.post.MissionTextDto;
 import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
+import backend.mydays.repository.ChallengeRepository;
+import backend.mydays.repository.PostRepository;
 import backend.mydays.repository.TitleRepository;
 import backend.mydays.repository.UserChallengeRepository;
 import backend.mydays.repository.UserRepository;
 import backend.mydays.repository.UserTitleRepository;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +41,8 @@ public class MyPageService {
     private final UserTitleRepository userTitleRepository;
     private final TitleRepository titleRepository;
     private final PostService postService; // Inject PostService
+    private final ChallengeRepository challengeRepository;
+    private final PostRepository postRepository;
 
     public MyStatusResponseDto getMyStatus(String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
@@ -97,17 +109,51 @@ public class MyPageService {
         return new MyCalendarResponseDto(user.getCreatedAt(), calendarPosts);
     }
 
-    public PostDetailResponseWrapperDto getMyPostByDate(String dateString, String userEmail) {
+    public PostDetailResponseWrapperDto getMyPostByPostId(Long postId, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
-        LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        // 사용자가 해당 postId를 수행한 챌린지인지 확인 (권한 체크)
+        boolean isUserChallenge = userChallengeRepository.existsByUserAndPostId(user, postId);
+        if (!isUserChallenge) {
+            throw new ResourceNotFoundException("Post", "id", postId);
+        }
 
-        UserChallenge userChallenge = userChallengeRepository.findByUserAndCompletedAt(user, date)
-                .orElseThrow(() -> new ResourceNotFoundException("UserChallenge", "date", dateString));
-
-        return postService.getPostDetail(userChallenge.getPost().getId(), userEmail);
+        return postService.getPostDetail(postId, userEmail);
     }
+
+    public MissionDateDto getMyMissionByPostId(Long postId) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+        Challenge challenge = challengeRepository.findById(post.getChallenge().getId())
+            .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
+
+        LocalDate date = challenge.getChallengeDate();
+        // "M월 d일 E요일" 포맷 정의, Locale.KOREAN으로 요일 한글 표시
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M월 d일 E요일", Locale.KOREAN);
+        String formattedDate = date.format(formatter);
+
+        return new MissionDateDto(formattedDate,challenge.getContent());
+
+    }
+
+    public CalendarPostDetailResponseWrapperDto getCalendarPostDetail(Long postId, String userEmail) {
+        Users user = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
+
+        // 사용자가 해당 postId를 수행한 챌린지인지 확인 (권한 체크)
+        boolean isUserChallenge = userChallengeRepository.existsByUserAndPostId(user, postId);
+        if (!isUserChallenge) {
+            throw new ResourceNotFoundException("Post", "id", postId);
+        }
+
+        PostDetailResponseWrapperDto postDetailResponseWrapperDto =  postService.getPostDetail(postId, userEmail);
+        FeedPostDto feedPostDto = postDetailResponseWrapperDto.getPost();
+        List<CommentDto> comments = postDetailResponseWrapperDto.getComments();
+        MissionDateDto missionDateDto = getMyMissionByPostId(postId);
+        return new CalendarPostDetailResponseWrapperDto(missionDateDto, feedPostDto, comments);
+    }
+
 
     public MyTitlesResponseDto getMyTitles(String userEmail) {
         Users user = userRepository.findByEmail(userEmail)

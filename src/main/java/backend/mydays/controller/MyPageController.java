@@ -5,7 +5,7 @@ import backend.mydays.dto.mypage.ActiveTitleUpdateRequest;
 import backend.mydays.dto.mypage.MyCalendarResponseDto;
 import backend.mydays.dto.mypage.MyStatusResponseDto;
 import backend.mydays.dto.mypage.MyTitlesResponseDto;
-import backend.mydays.dto.post.PostDetailResponseWrapperDto;
+import backend.mydays.dto.post.CalendarPostDetailResponseWrapperDto;
 import backend.mydays.service.MyPageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,14 +41,16 @@ public class MyPageController {
         return BaseResponse.ok("나의 챌린지 달력 조회에 성공했습니다.", response);
     }
 
-    @Operation(summary = "특정 날짜의 내 게시물 조회", description = "챌린지 달력에서 특정 날짜를 클릭하여 그날 내가 작성한 게시물을 조회합니다.")
-    @GetMapping("/posts/{date}")
-    public ResponseEntity<BaseResponse<PostDetailResponseWrapperDto>> getMyPostsByDate(
-            @PathVariable String date,
-            @AuthenticationPrincipal UserDetails userDetails
+
+    @Operation(summary = "내 게시물 상세 조회", description = "게시물 ID로 내가 작성한 게시물 상세 정보를 조회합니다.")
+    @GetMapping("/posts/{postId}")
+    public ResponseEntity<BaseResponse<CalendarPostDetailResponseWrapperDto>> getMyPostByPostId(
+        @PathVariable Long postId,
+        @AuthenticationPrincipal UserDetails userDetails
     ) {
-        PostDetailResponseWrapperDto response = myPageService.getMyPostByDate(date, userDetails.getUsername());
-        return BaseResponse.ok("특정 날짜의 내 게시물 조회에 성공했습니다.", response);
+
+        CalendarPostDetailResponseWrapperDto response = myPageService.getCalendarPostDetail(postId, userDetails.getUsername());
+        return BaseResponse.ok("내 게시물 상세 조회에 성공했습니다.", response);
     }
 
     @Operation(summary = "보유 칭호 목록 조회", description = "내가 획득한 칭호 목록을 조회합니다.")

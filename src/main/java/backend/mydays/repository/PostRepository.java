@@ -3,6 +3,7 @@ package backend.mydays.repository;
 import backend.mydays.domain.Post;
 import backend.mydays.domain.Users;
 import backend.mydays.domain.Challenge;
+import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +24,5 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByUserAndDate(@Param("user") Users user, @Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
 
     Optional<Post> findByUserAndChallenge(Users user, Challenge challenge);
+
 }
