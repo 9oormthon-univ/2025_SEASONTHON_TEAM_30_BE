@@ -141,6 +141,7 @@ public class PostService {
         long commentCount = commentRepository.countByPost(post);
         boolean isLiked = likeRepository.findByUserAndPost(user, post).isPresent();
         Title activeTitle = post.getUser().getActiveTitle();
+        boolean isOwner = post.getUser().getId().equals(user.getId());
 
         return new FeedPostDto(
                 String.valueOf(post.getId()),
@@ -153,7 +154,8 @@ public class PostService {
                 post.getImageUrl(),
                 likeCount,
                 isLiked,
-                commentCount
+                commentCount,
+                isOwner
         );
     }
 

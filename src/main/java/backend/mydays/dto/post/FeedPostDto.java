@@ -1,6 +1,7 @@
 package backend.mydays.dto.post;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -19,6 +20,9 @@ public class FeedPostDto {
     private String content;
     private String contentImgUrl;
     private long likeCount;
+    @JsonProperty("isLiked")
     private boolean isLiked;
     private long commentCount;
+    @JsonProperty("isOwner")
+    private boolean isOwner;
 }
