@@ -219,3 +219,5 @@ $RECYCLE.BIN/
 # Custom ignored files
 api.md
 error.txt
+application.yml
+GEMINI.md

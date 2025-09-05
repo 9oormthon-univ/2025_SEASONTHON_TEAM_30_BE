@@ -61,10 +61,12 @@ public class Users {
     private boolean challengeReminderNotification = true;
 
     @Builder
-    public Users(String nickname, String email, String password) {
+    public Users(String nickname, String email, String password, Title activeTitle, Character character) {
         this.nickname = nickname;
         this.email = email;
         this.password = password;
+        this.activeTitle = activeTitle;
+        this.character = character;
     }
 
     public void updateActiveTitle(Title title) {

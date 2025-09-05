@@ -1,5 +1,6 @@
 package backend.mydays.service;
 
+import backend.mydays.domain.Title;
 import backend.mydays.domain.Users;
 import backend.mydays.dto.auth.LoginRequest;
 import backend.mydays.dto.auth.LoginResponse;
@@ -8,6 +9,7 @@ import backend.mydays.dto.auth.SignUpResponse;
 import backend.mydays.config.jwt.JwtProvider;
 import backend.mydays.domain.Character;
 import backend.mydays.repository.CharacterRepository;
+import backend.mydays.repository.TitleRepository;
 import backend.mydays.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +28,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
     private final CharacterRepository characterRepository;
+    private final TitleRepository titleRepository;
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
@@ -36,10 +39,19 @@ public class AuthService {
             throw new IllegalArgumentException("이미 사용중인 닉네임입니다.");
         }
 
+        Title title = titleRepository.findById(1L)
+            .orElseThrow(() -> new IllegalArgumentException("Title with id=1 not found"));
+
+        Character character = characterRepository.findById(1L)
+            .orElseThrow(() -> new IllegalArgumentException("Character with id=1 not found"));
+
+
         Users user = Users.builder()
                 .nickname(request.getNickname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .activeTitle(title)
+                .character(character)
                 .build();
 
         Character defaultCharacter = characterRepository.findByLevel(1)

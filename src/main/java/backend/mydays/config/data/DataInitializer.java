@@ -31,17 +31,17 @@ public class DataInitializer implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		// 0. Create Characters
-		createCharacterIfNotFound("새싹", 1, "/images/big/0.png");
-		createCharacterIfNotFound("새싹", 2, "/images/big/1.png");
-		createCharacterIfNotFound("불꽃", 3, "/images/big/2.png");
-		createCharacterIfNotFound("물방울", 3, "/images/big/3.png");
-		createCharacterIfNotFound("풀잎", 3, "/images/big/4.png");
-		createCharacterIfNotFound("불꽃", 4, "/images/big/5.png");
-		createCharacterIfNotFound("물방울", 4, "/images/big/6.png");
-		createCharacterIfNotFound("풀잎", 4, "/images/big/7.png");
-		createCharacterIfNotFound("불꽃", 5, "/images/big/8.png");
-		createCharacterIfNotFound("물방울", 5, "/images/big/9.png");
-		createCharacterIfNotFound("풀잎", 5, "/images/big/10.png");
+		Character character1 = createCharacterIfNotFound("새싹", 1, "/images/big/0.png");
+		Character character2 = createCharacterIfNotFound("새싹", 2, "/images/big/1.png");
+		Character character3 = createCharacterIfNotFound("불꽃", 3, "/images/big/2.png");
+		Character character4 = createCharacterIfNotFound("물방울", 3, "/images/big/3.png");
+		Character character5 = createCharacterIfNotFound("풀잎", 3, "/images/big/4.png");
+		Character character6 = createCharacterIfNotFound("불꽃", 4, "/images/big/5.png");
+		Character character7 = createCharacterIfNotFound("물방울", 4, "/images/big/6.png");
+		Character character8 = createCharacterIfNotFound("풀잎", 4, "/images/big/7.png");
+		Character character9 = createCharacterIfNotFound("불꽃", 5, "/images/big/8.png");
+		Character character10 = createCharacterIfNotFound("물방울", 5, "/images/big/9.png");
+		Character character11 = createCharacterIfNotFound("풀잎", 5, "/images/big/10.png");
 
 		// 1. Create Users
 		Users user1 = createUserIfNotFound("test@test.com", "테스트유저", "password");
@@ -115,10 +115,13 @@ public class DataInitializer implements CommandLineRunner {
 
 		// Set active titles for users
 		user1.updateActiveTitle(title1);
+		user1.setCharacter(character1);
 		userRepository.save(user1);
 		user2.updateActiveTitle(title2);
+		user2.setCharacter(character2);
 		userRepository.save(user2);
 		user3.updateActiveTitle(title3);
+		user3.setCharacter(character3);
 		userRepository.save(user3);
 	}
 
