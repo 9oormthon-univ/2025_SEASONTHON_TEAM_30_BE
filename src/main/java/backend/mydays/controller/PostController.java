@@ -81,23 +81,14 @@ public class PostController {
         return BaseResponse.ok("게시물이 삭제되었습니다.", null);
     }
 
-    @Operation(summary = "게시물 좋아요", description = "다른 사람의 게시물에 '좋아요'를 누릅니다.")
+    @Operation(summary = "게시물 좋아요 토글", description = "다른 사람의 게시물에 '좋아요'를 누르거나 취소합니다.")
     @PostMapping("/like")
-    public ResponseEntity<BaseResponse<Void>> likePost(
-            @RequestBody PostIdRequestDto request,
-            @AuthenticationPrincipal UserDetails userDetails
+    public ResponseEntity<BaseResponse<Void>> toggleLikePost(
+        @RequestBody PostIdRequestDto request,
+        @AuthenticationPrincipal UserDetails userDetails
     ) {
-        postService.likePost(Long.parseLong(request.getPostId()), userDetails.getUsername());
-        return BaseResponse.ok("게시물을 좋아합니다.", null);
+        postService.toggleLikePost(Long.parseLong(request.getPostId()), userDetails.getUsername());
+        return BaseResponse.ok("게시물 좋아요 상태를 변경했습니다.", null);
     }
 
-    @Operation(summary = "게시물 좋아요 취소", description = "다른 사람의 게시물에 '좋아요'를 취소합니다.")
-    @PostMapping("/unlike")
-    public ResponseEntity<BaseResponse<Void>> unlikePost(
-            @RequestBody PostIdRequestDto request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        postService.unlikePost(Long.parseLong(request.getPostId()), userDetails.getUsername());
-        return BaseResponse.ok("게시물 좋아요를 취소했습니다.", null);
-    }
 }

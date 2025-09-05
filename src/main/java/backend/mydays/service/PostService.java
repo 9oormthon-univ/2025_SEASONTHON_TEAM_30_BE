@@ -9,6 +9,7 @@ import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.*;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -108,31 +109,20 @@ public class PostService {
     }
 
     @Transactional
-    public void likePost(Long postId, String userEmail) {
+    public void toggleLikePost(Long postId, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
+            .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+            .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
-        if (likeRepository.findByUserAndPost(user, post).isPresent()) {
-            throw new IllegalStateException("이미 좋아요를 누른 게시물입니다.");
+        Optional<Like> existingLike = likeRepository.findByUserAndPost(user, post);
+
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+        } else {
+            Like like = Like.builder().user(user).post(post).build();
+            likeRepository.save(like);
         }
-
-        Like like = Like.builder().user(user).post(post).build();
-        likeRepository.save(like);
-    }
-
-    @Transactional
-    public void unlikePost(Long postId, String userEmail) {
-        Users user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
-
-        Like like = likeRepository.findByUserAndPost(user, post)
-                .orElseThrow(() -> new IllegalStateException("좋아요를 누르지 않은 게시물입니다."));
-
-        likeRepository.delete(like);
     }
 
 
