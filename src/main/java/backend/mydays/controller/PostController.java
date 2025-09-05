@@ -41,13 +41,12 @@ public class PostController {
     }
 
     @Operation(summary = "피드(게시물 목록) 조회", description = "다른 사람들이 올린 챌린지 게시물들을 최신순으로 조회합니다.")
-    @GetMapping
+    @GetMapping("/page/{page}")
     public ResponseEntity<BaseResponse<PageResponseDto<FeedPostDto>>> getFeed(
-            @RequestBody PageRequestDto pageRequestDto,
+            @PathVariable Integer page,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        int page = pageRequestDto.getPage();
-        int size = 20; // 기존 페이징 사이즈 유지
+        int size = 5; //페이징 사이즈
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
 
