@@ -49,15 +49,15 @@ public class DataInitializer implements CommandLineRunner {
 		Users user3 = createUserIfNotFound("user3@example.com", "꾸준함의아이콘", "password");
 
 		// 2. Create Challenges
-		Challenge challenge1 = createChallengeIfNotFound(LocalDate.of(2025, 9, 1),
+		Challenge challenge1 = createChallengeIfNotFound(LocalDate.of(2025, 9, 3),
 			"오늘의 챌린지: 물 2리터 마시기");
-		Challenge challenge2 = createChallengeIfNotFound(LocalDate.of(2025, 9, 2),
+		Challenge challenge2 = createChallengeIfNotFound(LocalDate.of(2025, 9, 4),
 			"오늘의 챌린지: 10분 명상하기");
-		Challenge challenge3 = createChallengeIfNotFound(LocalDate.of(2025, 9, 3),
+		Challenge challenge3 = createChallengeIfNotFound(LocalDate.of(2025, 9, 5),
 			"오늘의 챌린지: 감사일기 쓰기");
-		Challenge challenge4 = createChallengeIfNotFound(LocalDate.of(2025, 9, 4),
+		Challenge challenge4 = createChallengeIfNotFound(LocalDate.of(2025, 9, 6),
 			"오늘의 챌린지: 계단 이용하기");
-		Challenge challenge5 = createChallengeIfNotFound(LocalDate.of(2025, 9, 5),
+		Challenge challenge5 = createChallengeIfNotFound(LocalDate.of(2025, 9, 7),
 			"오늘의 챌린지: 아침 스트레칭 5분");
 
 		// 3. Create Posts
@@ -104,7 +104,7 @@ public class DataInitializer implements CommandLineRunner {
 		createCommentIfNotFound(post5, user1, "감사일기 좋은 습관이죠!");
 
 		// 7. Create Titles
-		Title title1 = createTitleIfNotFound("첫 걸음", "하루 챌린지를 처음 시작한 사용자", "#FFD700");
+		Title title1 = createTitleIfNotFound("스타터 \uD83C\uDFC1", "하루 챌린지를 처음 시작한 사용자", "#FFFFFF");
 		Title title2 = createTitleIfNotFound("꾸준함의 아이콘", "7일 연속 챌린지 성공", "#00BFFF");
 		Title title3 = createTitleIfNotFound("챌린지 마스터", "30일 연속 챌린지 성공", "#FF69B4");
 
