@@ -2,11 +2,13 @@ package backend.mydays.controller;
 
 import backend.mydays.dto.common.BaseResponse;
 import backend.mydays.dto.common.PageResponseDto;
+import backend.mydays.dto.mypage.PageRequestDto;
 import backend.mydays.dto.post.*;
 import backend.mydays.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -41,9 +43,14 @@ public class PostController {
     @Operation(summary = "피드(게시물 목록) 조회", description = "다른 사람들이 올린 챌린지 게시물들을 최신순으로 조회합니다.")
     @GetMapping
     public ResponseEntity<BaseResponse<PageResponseDto<FeedPostDto>>> getFeed(
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestBody PageRequestDto pageRequestDto,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
+        int page = pageRequestDto.getPage();
+        int size = 20; // 기존 페이징 사이즈 유지
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
         PageResponseDto<FeedPostDto> response = new PageResponseDto<>(postService.getFeed(pageable, userDetails.getUsername()));
         return BaseResponse.ok("피드 조회에 성공했습니다.", response);
     }
