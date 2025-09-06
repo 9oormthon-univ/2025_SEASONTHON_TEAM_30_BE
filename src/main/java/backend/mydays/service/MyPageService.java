@@ -10,6 +10,7 @@ import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.*;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -45,8 +46,23 @@ public class MyPageService {
         String growthMessage = "오늘도 성장 중이에요!";
         boolean isBubbleVisible = true;
         double progress = 0.5;
-        int totalChallengeCount = 42;
-        int daysCount = 7;
+        // totalChallengeCount: 유저가 작성한 전체 포스트 수
+        int totalChallengeCount =  postRepository.countByUser(user);
+
+        // 유저의 모든 포스트 날짜를 가져와서 LocalDate로 변환 후 Set으로 저장
+        Set<LocalDate> postDates = postRepository.findAllByUser(user).stream()
+            .map(post -> post.getCreatedAt().toLocalDate())
+            .collect(Collectors.toSet());
+
+// 오늘부터 거꾸로 연속 참여일 계산
+        int consecutiveDays = 0;
+        LocalDate today = LocalDate.now();
+
+        while (postDates.contains(today.minusDays(consecutiveDays))) {
+            consecutiveDays++;
+        }
+
+        int daysCount = consecutiveDays;
         boolean isCompleteMission = false;
 
         String userTitle = user.getActiveTitle() != null ? user.getActiveTitle().getName() : "";
