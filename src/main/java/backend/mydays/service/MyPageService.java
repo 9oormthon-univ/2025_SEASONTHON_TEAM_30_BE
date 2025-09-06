@@ -19,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -90,7 +91,7 @@ public class MyPageService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userDetails.getUsername()));
 
         LocalDate today = LocalDate.now();
-        LocalDate sunday = today.with(DayOfWeek.SUNDAY);
+        LocalDate sunday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
 
         List<DayContentDto> dayContents = new ArrayList<>();
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M월 d일 E요일", Locale.KOREAN);
