@@ -5,7 +5,6 @@ import backend.mydays.domain.Users;
 import backend.mydays.dto.auth.*;
 import backend.mydays.config.jwt.JwtProvider;
 import backend.mydays.domain.Character;
-import io.jsonwebtoken.Claims;
 import backend.mydays.dto.kakao.KakaoUserInfoResponse;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.CharacterRepository;
@@ -88,11 +87,11 @@ public class AuthService {
     }
 
     @Transactional
-    public KakaoLoginResponse kakaoLogin(String idToken) {
-        Claims claims = kakaoService.getClaimsFromIdToken(idToken);
+    public KakaoLoginResponse kakaoLogin(String kakaoAccessToken) {
+        KakaoUserInfoResponse userInfoResponse = kakaoService.getKakaoUserInfo(kakaoAccessToken);
 
-        String email = claims.get("email", String.class);
-        String nickname = claims.get("nickname", String.class);
+        String email = userInfoResponse.getKakaoAccount().getEmail();
+        String nickname = userInfoResponse.getKakaoAccount().getProfile().getNickname();
 
         boolean isNewUser = !userRepository.findByEmail(email).isPresent();
 
