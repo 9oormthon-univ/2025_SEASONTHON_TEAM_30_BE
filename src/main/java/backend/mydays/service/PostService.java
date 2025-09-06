@@ -9,15 +9,20 @@ import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.*;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +37,8 @@ public class PostService {
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
 
+    private final String uploadDir = "src/main/resources/static/images/posts/";
+
     @Transactional
     public Long createPost(PostCreateRequest request, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
@@ -40,9 +47,7 @@ public class PostService {
         Challenge challenge = challengeRepository.findByChallengeDate(LocalDate.now())
                 .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
 
-        // TODO: Base64 이미지를 처리하고 실제 이미지 URL을 저장해야 합니다.
-        // 현재는 임시 URL을 사용합니다.
-        String imageUrl = "https://example.com/images/placeholder.jpg";
+        String imageUrl = saveBase64Image(request.getBase64Img());
 
         Post post = Post.builder()
                 .user(user)
@@ -62,6 +67,33 @@ public class PostService {
         userChallengeRepository.save(userChallenge);
 
         return savedPost.getId();
+    }
+
+    private String saveBase64Image(String base64Image) {
+        if (base64Image == null || base64Image.isEmpty()) {
+            throw new IllegalArgumentException("이미지 데이터가 없습니다.");
+        }
+
+        // data:image/png;base64, 같은 프리픽스 제거
+        String pureBase64 = base64Image.substring(base64Image.indexOf(",") + 1);
+        byte[] imageBytes = Base64.getDecoder().decode(pureBase64);
+
+        String filename = UUID.randomUUID().toString() + ".png"; // 확장자는 실제 이미지 타입에 맞게 결정하는 것이 좋습니다.
+        File destinationFile = new File(uploadDir + filename);
+
+        // 디렉토리 생성
+        File directory = new File(uploadDir);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
+            fos.write(imageBytes);
+        } catch (IOException e) {
+            throw new IllegalStateException("이미지를 저장하는 데 실패했습니다.", e);
+        }
+
+        return "/images/posts/" + filename;
     }
 
     public Page<FeedPostDto> getFeed(Pageable pageable, String userEmail) {
