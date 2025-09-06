@@ -100,7 +100,7 @@ public class MyPageService {
         List<UserChallenge> challenges = userChallengeRepository.findByUser(user);
         List<CalendarPostDto> calendarPosts = challenges.stream()
             .map(uc -> new CalendarPostDto(
-                "post_" + uc.getPost().getId(),
+                String.valueOf(uc.getPost().getId()),
                 uc.getPost().getImageUrl(),
                 uc.getPost().getCreatedAt()
             ))
