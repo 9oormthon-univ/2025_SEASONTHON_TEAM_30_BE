@@ -390,6 +390,7 @@ public class DataInitializer implements CommandLineRunner {
 				.content(content)
 				.imageUrl(imageUrl)
 				.build();
+			newPost.setCreatedAt(challenge.getChallengeDate().atStartOfDay());
 			return postRepository.save(newPost);
 		});
 	}

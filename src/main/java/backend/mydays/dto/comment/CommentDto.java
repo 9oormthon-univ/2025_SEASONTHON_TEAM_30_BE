@@ -14,7 +14,7 @@ public class CommentDto {
     private String userName;
     private String userTitle;
     private String userTitleColor;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDateTime createdAt;
     private String content;
 }
