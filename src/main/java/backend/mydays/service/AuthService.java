@@ -5,6 +5,7 @@ import backend.mydays.domain.Users;
 import backend.mydays.dto.auth.*;
 import backend.mydays.config.jwt.JwtProvider;
 import backend.mydays.domain.Character;
+import backend.mydays.dto.kakao.KakaoTokenResponse;
 import backend.mydays.dto.kakao.KakaoUserInfoResponse;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.CharacterRepository;
@@ -22,6 +23,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
@@ -41,6 +44,15 @@ public class AuthService {
     private final CharacterRepository characterRepository;
     private final TitleRepository titleRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${kakao.client-id}")
+    private String kakaoClientId;
+
+    @Value("${kakao.redirect-uri}")
+    private String kakaoRedirectUri;
+
+    @Value("${kakao.token-uri}")
+    private String kakaoTokenUri;
 
     @Value("${kakao.user-info-uri}")
     private String kakaoUserInfoUri;
@@ -97,8 +109,9 @@ public class AuthService {
     }
 
     @Transactional
-    public KakaoLoginResponse kakaoLogin(String kakaoAccessToken) {
-        KakaoUserInfoResponse userInfoResponse = getKakaoUserInfo(kakaoAccessToken);
+    public KakaoLoginResponse kakaoLogin(String code) {
+        KakaoTokenResponse tokenResponse = getKakaoToken(code);
+        KakaoUserInfoResponse userInfoResponse = getKakaoUserInfo(tokenResponse.getAccessToken());
 
         String email = userInfoResponse.getKakaoAccount().getEmail();
         String nickname = userInfoResponse.getKakaoAccount().getProfile().getNickname();
@@ -149,6 +162,22 @@ public class AuthService {
 
         String newAccessToken = jwtProvider.generateAccessToken(email);
         return new TokenRefreshResponse(newAccessToken);
+    }
+
+    private KakaoTokenResponse getKakaoToken(String code) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "authorization_code");
+        params.add("client_id", kakaoClientId);
+        params.add("redirect_uri", kakaoRedirectUri);
+        params.add("code", code);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        ResponseEntity<KakaoTokenResponse> response = restTemplate.postForEntity(kakaoTokenUri, request, KakaoTokenResponse.class);
+
+        return response.getBody();
     }
 
     private KakaoUserInfoResponse getKakaoUserInfo(String accessToken) {
