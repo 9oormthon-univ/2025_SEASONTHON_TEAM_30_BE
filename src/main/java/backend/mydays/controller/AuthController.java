@@ -39,7 +39,7 @@ public class AuthController {
     @Operation(summary = "카카오 로그인", description = "카카오 액세스 토큰으로 로그인하고 JWT 토큰을 발급받습니다. 신규 유저 여부를 함께 반환합니다.")
     @PostMapping("/kakao/verify")
     public ResponseEntity<BaseResponse<KakaoLoginResponse>> kakaoLogin(@RequestBody KakaoLoginRequest request) {
-        KakaoLoginResponse response = authService.kakaoLogin(request.getKakaoAccessToken());
+        KakaoLoginResponse response = authService.kakaoLogin(request.getAccessToken());
         return BaseResponse.ok("로그인에 성공했습니다.", response);
     }
 
