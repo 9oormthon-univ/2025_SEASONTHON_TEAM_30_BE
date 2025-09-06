@@ -10,8 +10,14 @@ import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +45,18 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final CharacterRepository characterRepository;
 
-    private final String uploadDir = "src/main/resources/static/images/posts/";
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${supabase.url}")
+    private String supabaseUrl;
+
+    @Value("${supabase.key}")
+    private String supabaseKey;
+
+    @Value("${supabase.bucket}")
+    private String bucket;
+
+    //private final String uploadDir = "src/main/resources/static/images/posts/";
 
     @Transactional
     public Long createPost(PostCreateRequest request, String userEmail) {
@@ -48,7 +66,7 @@ public class PostService {
         Challenge challenge = challengeRepository.findByChallengeDate(LocalDate.now())
                 .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
 
-        String imageUrl = saveBase64Image(request.getBase64Img());
+        String imageUrl = uploadToSupabase(request.getBase64Img());
 
         Post post = Post.builder()
                 .user(user)
@@ -106,32 +124,68 @@ public class PostService {
         return savedPost.getId();
     }
 
-    private String saveBase64Image(String base64Image) {
+    /**
+     * Base64 → Supabase Storage 업로드 → public URL 반환
+     */
+    private String uploadToSupabase(String base64Image) {
         if (base64Image == null || base64Image.isEmpty()) {
             throw new IllegalArgumentException("이미지 데이터가 없습니다.");
         }
 
-        // data:image/png;base64, 같은 프리픽스 제거
         String pureBase64 = base64Image.substring(base64Image.indexOf(",") + 1);
         byte[] imageBytes = Base64.getDecoder().decode(pureBase64);
 
-        String filename = UUID.randomUUID().toString() + ".png"; // 확장자는 실제 이미지 타입에 맞게 결정하는 것이 좋습니다.
-        File destinationFile = new File(uploadDir + filename);
+        String fileName = UUID.randomUUID().toString() + ".png";
 
-        // 디렉토리 생성
-        File directory = new File(uploadDir);
-        if (!directory.exists()) {
-            directory.mkdirs();
+        String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucket + "/" + fileName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setBearerAuth(supabaseKey); // service_role key 사용
+
+        HttpEntity<byte[]> requestEntity = new HttpEntity<>(imageBytes, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            uploadUrl,
+            HttpMethod.PUT,
+            requestEntity,
+            String.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("Supabase 업로드 실패: " + response.getBody());
         }
 
-        try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
-            fos.write(imageBytes);
-        } catch (IOException e) {
-            throw new IllegalStateException("이미지를 저장하는 데 실패했습니다.", e);
-        }
-
-        return "/images/posts/" + filename;
+        return supabaseUrl + "/storage/v1/object/public/" + bucket + "/" + fileName;
     }
+
+//    private String saveBase64Image(String base64Image) {
+//        if (base64Image == null || base64Image.isEmpty()) {
+//            throw new IllegalArgumentException("이미지 데이터가 없습니다.");
+//        }
+//
+//        // data:image/png;base64, 같은 프리픽스 제거
+//        String pureBase64 = base64Image.substring(base64Image.indexOf(",") + 1);
+//        byte[] imageBytes = Base64.getDecoder().decode(pureBase64);
+//
+//        String filename = UUID.randomUUID().toString() + ".png"; // 확장자는 실제 이미지 타입에 맞게 결정하는 것이 좋습니다.
+//        File destinationFile = new File(uploadDir + filename);
+//
+//        // 디렉토리 생성
+//        File directory = new File(uploadDir);
+//        if (!directory.exists()) {
+//            directory.mkdirs();
+//        }
+//
+//        try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
+//            fos.write(imageBytes);
+//        } catch (IOException e) {
+//            throw new IllegalStateException("이미지를 저장하는 데 실패했습니다.", e);
+//        }
+//
+//        return "/images/posts/" + filename;
+//    }
+
 
     public Page<FeedPostDto> getFeed(Pageable pageable, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
