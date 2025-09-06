@@ -63,7 +63,10 @@ public class MyPageService {
         }
 
         int daysCount = consecutiveDays;
-        boolean isCompleteMission = false;
+
+        Challenge challenge = challengeRepository.findByChallengeDate(today)
+            .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
+        boolean isCompleteMission = userChallengeRepository.findByUserAndChallenge(user, challenge).isPresent();
 
         String userTitle = user.getActiveTitle() != null ? user.getActiveTitle().getName() : "";
         String userTitleColor = user.getActiveTitle() != null ? user.getActiveTitle().getColor() : "#000000";
