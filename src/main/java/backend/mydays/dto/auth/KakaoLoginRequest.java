@@ -7,6 +7,5 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class KakaoLoginRequest {
-    private String accessToken;
-    private String refreshToken; // This will be ignored by the backend
+    private String idToken;
 }
