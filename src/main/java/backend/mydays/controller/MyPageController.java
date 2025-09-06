@@ -1,10 +1,7 @@
 package backend.mydays.controller;
 
 import backend.mydays.dto.common.BaseResponse;
-import backend.mydays.dto.mypage.ActiveTitleUpdateRequest;
-import backend.mydays.dto.mypage.MyCalendarResponseDto;
-import backend.mydays.dto.mypage.MyStatusResponseDto;
-import backend.mydays.dto.mypage.MyTitlesResponseDto;
+import backend.mydays.dto.mypage.*;
 import backend.mydays.dto.post.CalendarPostDetailResponseWrapperDto;
 import backend.mydays.service.MyPageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +36,13 @@ public class MyPageController {
     ) {
         MyCalendarResponseDto response = myPageService.getMyCalendar(year, month, userDetails.getUsername());
         return BaseResponse.ok("나의 챌린지 달력 조회에 성공했습니다.", response);
+    }
+
+    @Operation(summary = "주간 캘린더 조회", description = "이번 주 챌린지 현황을 조회합니다.")
+    @GetMapping("/calendar/weekly")
+    public ResponseEntity<BaseResponse<WeeklyCalendarResponseDto>> getWeeklyCalendar(@AuthenticationPrincipal UserDetails userDetails) {
+        WeeklyCalendarResponseDto responseDto = myPageService.getWeeklyCalendar(userDetails);
+        return BaseResponse.ok("주간 캘린더 조회에 성공했습니다.", responseDto);
     }
 
 
