@@ -97,11 +97,13 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse kakaoLogin(String kakaoAccessToken) {
+    public KakaoLoginResponse kakaoLogin(String kakaoAccessToken) {
         KakaoUserInfoResponse userInfoResponse = getKakaoUserInfo(kakaoAccessToken);
 
         String email = userInfoResponse.getKakaoAccount().getEmail();
         String nickname = userInfoResponse.getKakaoAccount().getProfile().getNickname();
+
+        boolean isNewUser = !userRepository.findByEmail(email).isPresent();
 
         Users user = userRepository.findByEmail(email).orElseGet(() -> {
             String uniqueNickname = getUniqueNickname(nickname);
@@ -127,7 +129,7 @@ public class AuthService {
         user.updateRefreshToken(refreshToken, Instant.ofEpochMilli(refreshTokenExpiryDate.getTime()).atZone(ZoneId.systemDefault()).toLocalDateTime());
         userRepository.save(user);
 
-        return new LoginResponse(accessToken, refreshToken);
+        return new KakaoLoginResponse(accessToken, refreshToken, isNewUser);
     }
 
     @Transactional
