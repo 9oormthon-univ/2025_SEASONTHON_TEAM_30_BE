@@ -26,4 +26,6 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
     List<UserChallenge> findByUser(Users user);
 
     boolean existsByUserAndPostId(Users user, Long postId);
+
+    Optional<UserChallenge> findTopByUserOrderByCompletedAtDesc(Users user);
 }

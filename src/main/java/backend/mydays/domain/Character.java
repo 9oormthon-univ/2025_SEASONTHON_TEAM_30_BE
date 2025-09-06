@@ -26,10 +26,14 @@ public class Character {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "group_id")
+    private Integer groupId;
+
     @Builder
-    public Character(String name, int level, String imageUrl) {
+    public Character(String name, int level, String imageUrl, Integer groupId) {
         this.name = name;
         this.level = level;
         this.imageUrl = imageUrl;
+        this.groupId = groupId;
     }
 }

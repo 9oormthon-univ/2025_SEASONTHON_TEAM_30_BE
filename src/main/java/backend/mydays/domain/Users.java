@@ -44,6 +44,9 @@ public class Users {
     @Column(columnDefinition = "INT DEFAULT 0")
     private int totalCompletedDays;
 
+    @Column(columnDefinition = "INT DEFAULT 1")
+    private int level;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -67,6 +70,11 @@ public class Users {
         this.password = password;
         this.activeTitle = activeTitle;
         this.character = character;
+        this.level = 1;
+    }
+
+    public void levelUp() {
+        this.level++;
     }
 
     public void updateActiveTitle(Title title) {
@@ -75,6 +83,14 @@ public class Users {
 
     public void setCharacter(Character character) {
         this.character = character;
+    }
+
+    public void setConsecutiveDays(int consecutiveDays) {
+        this.consecutiveDays = consecutiveDays;
+    }
+
+    public void setTotalCompletedDays(int totalCompletedDays) {
+        this.totalCompletedDays = totalCompletedDays;
     }
 
     public String getAvatarImageUrl() {

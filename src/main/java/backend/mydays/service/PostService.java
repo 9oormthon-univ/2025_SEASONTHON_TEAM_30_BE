@@ -36,6 +36,7 @@ public class PostService {
     private final UserChallengeRepository userChallengeRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final CharacterRepository characterRepository;
 
     private final String uploadDir = "src/main/resources/static/images/posts/";
 
@@ -65,6 +66,42 @@ public class PostService {
                 .completedAt(LocalDate.now())
                 .build();
         userChallengeRepository.save(userChallenge);
+
+        // 연속 챌린지 참여일 업데이트
+        Optional<UserChallenge> lastChallenge = userChallengeRepository.findTopByUserOrderByCompletedAtDesc(user);
+        if (lastChallenge.isPresent()) {
+            LocalDate lastCompletedDate = lastChallenge.get().getCompletedAt();
+            if (LocalDate.now().isEqual(lastCompletedDate.plusDays(1))) {
+                user.setConsecutiveDays(user.getConsecutiveDays() + 1);
+            } else if (!LocalDate.now().isEqual(lastCompletedDate)) {
+                user.setConsecutiveDays(1);
+            }
+        } else {
+            user.setConsecutiveDays(1);
+        }
+
+        // 레벨업 및 캐릭터 교체 로직
+        user.setTotalCompletedDays(user.getTotalCompletedDays() + 1);
+        if (user.getTotalCompletedDays() > 0 && user.getTotalCompletedDays() % 6 == 0) {
+            user.levelUp();
+            int newLevel = user.getLevel();
+
+            if (newLevel == 2) {
+                characterRepository.findByLevel(2).ifPresent(user::setCharacter);
+            } else if (newLevel == 3) {
+                List<backend.mydays.domain.Character> level3Chars = characterRepository.findAllByLevel(3);
+                if (!level3Chars.isEmpty()) {
+                    int randomIndex = (int) (Math.random() * level3Chars.size());
+                    user.setCharacter(level3Chars.get(randomIndex));
+                }
+            } else if (newLevel > 3) {
+                Integer groupId = Optional.ofNullable(user.getCharacter()).map(backend.mydays.domain.Character::getGroupId).orElse(null);
+                if (groupId != null) {
+                    characterRepository.findByLevelAndGroupId(newLevel, groupId).ifPresent(user::setCharacter);
+                }
+            }
+        }
+        userRepository.save(user);
 
         return savedPost.getId();
     }
