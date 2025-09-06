@@ -63,6 +63,12 @@ public class Users {
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean challengeReminderNotification = true;
 
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
+    @Column(name = "refresh_token_expiry_date")
+    private LocalDateTime refreshTokenExpiryDate;
+
     @Builder
     public Users(String nickname, String email, String password, Title activeTitle, Character character) {
         this.nickname = nickname;
@@ -71,6 +77,11 @@ public class Users {
         this.activeTitle = activeTitle;
         this.character = character;
         this.level = 1;
+    }
+
+    public void updateRefreshToken(String refreshToken, LocalDateTime refreshTokenExpiryDate) {
+        this.refreshToken = refreshToken;
+        this.refreshTokenExpiryDate = refreshTokenExpiryDate;
     }
 
     public void levelUp() {

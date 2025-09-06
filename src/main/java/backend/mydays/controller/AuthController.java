@@ -1,10 +1,6 @@
 package backend.mydays.controller;
 
-import backend.mydays.dto.auth.LoginRequest;
-import backend.mydays.dto.auth.LoginResponse;
-import backend.mydays.dto.auth.NicknameRequest;
-import backend.mydays.dto.auth.SignUpRequest;
-import backend.mydays.dto.auth.SignUpResponse;
+import backend.mydays.dto.auth.*;
 import backend.mydays.dto.common.BaseResponse;
 import backend.mydays.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +34,20 @@ public class AuthController {
     public ResponseEntity<BaseResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return BaseResponse.ok("로그인에 성공했습니다.", response);
+    }
+
+    @Operation(summary = "카카오 로그인", description = "카카오 인가 코드로 로그인하고 JWT 토큰을 발급받습니다.")
+    @PostMapping("/kakao/callback")
+    public ResponseEntity<BaseResponse<LoginResponse>> kakaoLogin(@RequestBody KakaoLoginRequest request) {
+        LoginResponse response = authService.kakaoLogin(request.getCode());
+        return BaseResponse.ok("로그인에 성공했습니다.", response);
+    }
+
+    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
+    @PostMapping("/refresh")
+    public ResponseEntity<BaseResponse<TokenRefreshResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
+        TokenRefreshResponse response = authService.refreshToken(request);
+        return BaseResponse.ok("액세스 토큰이 재발급되었습니다.", response);
     }
 
     @Operation(summary = "로그아웃", description = "사용자를 로그아웃 처리합니다.")

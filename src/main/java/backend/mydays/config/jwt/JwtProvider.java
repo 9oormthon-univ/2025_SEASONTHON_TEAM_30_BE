@@ -17,15 +17,27 @@ import java.util.function.Function;
 public class JwtProvider {
 
     private final Key key;
-    private final long expirationTime;
+    private final long accessTokenExpirationTime;
+    private final long refreshTokenExpirationTime;
 
-    public JwtProvider(@Value("${jwt.secret}") String secretKey, @Value("${jwt.expiration-time}") long expirationTime) {
+    public JwtProvider(@Value("${jwt.secret}") String secretKey,
+                       @Value("${jwt.expiration-time}") long accessTokenExpirationTime,
+                       @Value("${jwt.refresh-token-expiration-time}") long refreshTokenExpirationTime) {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.expirationTime = expirationTime;
+        this.accessTokenExpirationTime = accessTokenExpirationTime;
+        this.refreshTokenExpirationTime = refreshTokenExpirationTime;
     }
 
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
+        return generateToken(username, accessTokenExpirationTime);
+    }
+
+    public String generateRefreshToken(String username) {
+        return generateToken(username, refreshTokenExpirationTime);
+    }
+
+    private String generateToken(String username, long expirationTime) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationTime);
 
@@ -46,11 +58,21 @@ public class JwtProvider {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
     private boolean isTokenExpired(String token) {
         return getExpirationDateFromToken(token).before(new Date());
     }
 
-    private Date getExpirationDateFromToken(String token) {
+    public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
 
