@@ -31,17 +31,17 @@ public class DataInitializer implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		// 0. Create Characters
-		Character character1 = createCharacterIfNotFound("새싹", 1, "/images/big/0.png");
-		Character character2 = createCharacterIfNotFound("새싹", 2, "/images/big/1.png");
-		Character character3 = createCharacterIfNotFound("불꽃", 3, "/images/big/2.png");
-		Character character4 = createCharacterIfNotFound("물방울", 3, "/images/big/3.png");
-		Character character5 = createCharacterIfNotFound("풀잎", 3, "/images/big/4.png");
-		Character character6 = createCharacterIfNotFound("불꽃", 4, "/images/big/5.png");
-		Character character7 = createCharacterIfNotFound("물방울", 4, "/images/big/6.png");
-		Character character8 = createCharacterIfNotFound("풀잎", 4, "/images/big/7.png");
-		Character character9 = createCharacterIfNotFound("불꽃", 5, "/images/big/8.png");
-		Character character10 = createCharacterIfNotFound("물방울", 5, "/images/big/9.png");
-		Character character11 = createCharacterIfNotFound("풀잎", 5, "/images/big/10.png");
+		Character character1 = createCharacterIfNotFound("새싹", 1, "/images/big/0.png", null);
+		Character character2 = createCharacterIfNotFound("새싹", 2, "/images/big/1.png", null);
+		Character character3 = createCharacterIfNotFound("불꽃", 3, "/images/big/2.png", 1);
+		Character character4 = createCharacterIfNotFound("물방울", 3, "/images/big/3.png", 2);
+		Character character5 = createCharacterIfNotFound("풀잎", 3, "/images/big/4.png", 3);
+		Character character6 = createCharacterIfNotFound("불꽃", 4, "/images/big/5.png", 1);
+		Character character7 = createCharacterIfNotFound("물방울", 4, "/images/big/6.png", 2);
+		Character character8 = createCharacterIfNotFound("풀잎", 4, "/images/big/7.png", 3);
+		Character character9 = createCharacterIfNotFound("불꽃", 5, "/images/big/8.png", 1);
+		Character character10 = createCharacterIfNotFound("물방울", 5, "/images/big/9.png", 2);
+		Character character11 = createCharacterIfNotFound("풀잎", 5, "/images/big/10.png", 3);
 
 		// 1. Create Users
 		Users user1 = createUserIfNotFound("test@test.com", "테스트유저", "password");
@@ -220,12 +220,13 @@ public class DataInitializer implements CommandLineRunner {
 		});
 	}
 
-	private Character createCharacterIfNotFound(String name, int level, String imageUrl) {
-		return characterRepository.findByNameAndLevel(name, level).orElseGet(() -> {
+	private Character createCharacterIfNotFound(String name, int level, String imageUrl, Integer groupId) {
+		return characterRepository.findByNameAndLevelAndGroupId(name, level, groupId).orElseGet(() -> {
 			Character newCharacter = Character.builder()
 				.name(name)
 				.level(level)
 				.imageUrl(imageUrl)
+				.groupId(groupId)
 				.build();
 			return characterRepository.save(newCharacter);
 		});
