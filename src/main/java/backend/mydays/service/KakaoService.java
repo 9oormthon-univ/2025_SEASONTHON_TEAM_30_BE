@@ -1,36 +1,49 @@
 package backend.mydays.service;
 
 import backend.mydays.dto.kakao.KakaoUserInfoResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import java.util.Base64;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class KakaoService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${kakao.user-info-uri}")
-    private String kakaoUserInfoUri;
+    public KakaoUserInfoResponse getKakaoUserInfo(String idToken) {
+        try {
+            // In a real app, you must validate the token's signature, expiration, issuer, etc.
+            // For example: Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(idToken);
 
-    public KakaoUserInfoResponse getKakaoUserInfo(String accessToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            String[] tokenParts = idToken.split("\\.");
+            if (tokenParts.length < 2) {
+                throw new IllegalArgumentException("Invalid ID token");
+            }
+            String payload = tokenParts[1];
+            byte[] decodedBytes = Base64.getUrlDecoder().decode(payload);
+            String decodedPayload = new String(decodedBytes, StandardCharsets.UTF_8);
 
-        HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<KakaoUserInfoResponse> response = restTemplate.postForEntity(kakaoUserInfoUri, request, KakaoUserInfoResponse.class);
+            Map<String, Object> claims = objectMapper.readValue(decodedPayload, Map.class);
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return response.getBody();
+            String email = (String) claims.get("email");
+            String nickname = (String) claims.get("nickname");
+
+            // Construct a JSON string that mimics the structure expected by KakaoUserInfoResponse
+            String json = String.format(
+                "{\"kakao_account\": {\"email\": \"%s\", \"profile\": {\"nickname\": \"%s\"}}}",
+                email, nickname
+            );
+
+            // Deserialize the JSON string into a KakaoUserInfoResponse object
+            return objectMapper.readValue(json, KakaoUserInfoResponse.class);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decode or parse ID token", e);
         }
-        // In a real app, you'd throw a custom exception here
-        throw new RuntimeException("Failed to get user info from Kakao");
     }
 }

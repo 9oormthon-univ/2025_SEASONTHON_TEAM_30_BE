@@ -87,8 +87,8 @@ public class AuthService {
     }
 
     @Transactional
-    public KakaoLoginResponse kakaoLogin(String kakaoAccessToken) {
-        KakaoUserInfoResponse userInfoResponse = kakaoService.getKakaoUserInfo(kakaoAccessToken);
+    public KakaoLoginResponse kakaoLogin(String idToken) {
+        KakaoUserInfoResponse userInfoResponse = kakaoService.getKakaoUserInfo(idToken);
 
         String email = userInfoResponse.getKakaoAccount().getEmail();
         String nickname = userInfoResponse.getKakaoAccount().getProfile().getNickname();
