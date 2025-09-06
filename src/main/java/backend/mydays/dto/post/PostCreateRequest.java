@@ -4,7 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Setter // Setter is needed for ModelAttribute binding
+@Setter
 public class PostCreateRequest {
     private String content;
+    private String base64Img;
 }

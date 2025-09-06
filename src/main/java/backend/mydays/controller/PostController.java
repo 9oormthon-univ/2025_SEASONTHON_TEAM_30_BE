@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+
 
 @Tag(name = "게시물", description = "게시물 관련 API")
 @RestController
@@ -29,14 +29,10 @@ public class PostController {
     @Operation(summary = "게시물 생성", description = "오늘의 챌린지에 맞는 사진과 글을 업로드하여 게시물을 작성합니다.")
     @PostMapping
     public ResponseEntity<BaseResponse<PostCreateResponse>> createPost(
-        @RequestPart("content") PostCreateRequest request,
-        @RequestPart("image") MultipartFile image,
+        @RequestBody PostCreateRequest request,
         @AuthenticationPrincipal UserDetails userDetails
     ) {
-        // In a real application, the image would be uploaded to a cloud storage (e.g., S3) and its URL would be passed to the service.
-        // For now, we'll use a placeholder URL.
-        String imageUrl = "https://example.com/images/" + image.getOriginalFilename(); // Placeholder
-        Long postId = postService.createPost(request, userDetails.getUsername(), imageUrl);
+        Long postId = postService.createPost(request, userDetails.getUsername());
         return BaseResponse.created("게시물이 성공적으로 작성되었습니다.", new PostCreateResponse(String.valueOf(postId)));
     }
 

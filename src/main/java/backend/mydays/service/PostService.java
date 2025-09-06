@@ -33,12 +33,16 @@ public class PostService {
     private final CommentRepository commentRepository;
 
     @Transactional
-    public Long createPost(PostCreateRequest request, String userEmail, String imageUrl) {
+    public Long createPost(PostCreateRequest request, String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
         Challenge challenge = challengeRepository.findByChallengeDate(LocalDate.now())
                 .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
+
+        // TODO: Base64 이미지를 처리하고 실제 이미지 URL을 저장해야 합니다.
+        // 현재는 임시 URL을 사용합니다.
+        String imageUrl = "https://example.com/images/placeholder.jpg";
 
         Post post = Post.builder()
                 .user(user)
