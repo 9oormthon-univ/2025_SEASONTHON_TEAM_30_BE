@@ -5,27 +5,18 @@ import backend.mydays.domain.Users;
 import backend.mydays.dto.auth.*;
 import backend.mydays.config.jwt.JwtProvider;
 import backend.mydays.domain.Character;
-import backend.mydays.dto.kakao.KakaoTokenResponse;
 import backend.mydays.dto.kakao.KakaoUserInfoResponse;
 import backend.mydays.exception.ResourceNotFoundException;
 import backend.mydays.repository.CharacterRepository;
 import backend.mydays.repository.TitleRepository;
 import backend.mydays.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -43,20 +34,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final CharacterRepository characterRepository;
     private final TitleRepository titleRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    @Value("${kakao.client-id}")
-    private String kakaoClientId;
-
-    @Value("${kakao.redirect-uri}")
-    private String kakaoRedirectUri;
-
-    @Value("${kakao.token-uri}")
-    private String kakaoTokenUri;
-
-    @Value("${kakao.user-info-uri}")
-    private String kakaoUserInfoUri;
-
+    private final KakaoService kakaoService; // Inject KakaoService
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
@@ -109,9 +87,8 @@ public class AuthService {
     }
 
     @Transactional
-    public KakaoLoginResponse kakaoLogin(String code) {
-        KakaoTokenResponse tokenResponse = getKakaoToken(code);
-        KakaoUserInfoResponse userInfoResponse = getKakaoUserInfo(tokenResponse.getAccessToken());
+    public KakaoLoginResponse kakaoLogin(String kakaoAccessToken) {
+        KakaoUserInfoResponse userInfoResponse = kakaoService.getKakaoUserInfo(kakaoAccessToken);
 
         String email = userInfoResponse.getKakaoAccount().getEmail();
         String nickname = userInfoResponse.getKakaoAccount().getProfile().getNickname();
@@ -162,33 +139,6 @@ public class AuthService {
 
         String newAccessToken = jwtProvider.generateAccessToken(email);
         return new TokenRefreshResponse(newAccessToken);
-    }
-
-    private KakaoTokenResponse getKakaoToken(String code) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", "authorization_code");
-        params.add("client_id", kakaoClientId);
-        params.add("redirect_uri", kakaoRedirectUri);
-        params.add("code", code);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        ResponseEntity<KakaoTokenResponse> response = restTemplate.postForEntity(kakaoTokenUri, request, KakaoTokenResponse.class);
-
-        return response.getBody();
-    }
-
-    private KakaoUserInfoResponse getKakaoUserInfo(String accessToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<KakaoUserInfoResponse> response = restTemplate.postForEntity(kakaoUserInfoUri, request, KakaoUserInfoResponse.class);
-
-        return response.getBody();
     }
 
     private String getUniqueNickname(String nickname) {
