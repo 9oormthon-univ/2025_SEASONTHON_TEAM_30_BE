@@ -343,6 +343,8 @@ public class DataInitializer implements CommandLineRunner {
 		createUserTitleIfNotFound(user1, title1);
 		createUserTitleIfNotFound(user2, title2);
 		createUserTitleIfNotFound(user3, title3);
+		createUserTitleIfNotFound(user1, title4);
+		createUserTitleIfNotFound(user1, title3);
 
 		// Set active titles for users
 		user1.updateActiveTitle(title1);

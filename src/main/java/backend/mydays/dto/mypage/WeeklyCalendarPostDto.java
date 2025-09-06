@@ -1,5 +1,6 @@
 package backend.mydays.dto.mypage;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,6 +14,7 @@ public class WeeklyCalendarPostDto {
     private String userName;
     private String userTitle;
     private String userTitleColor;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDateTime createdAt;
     private String content;
     private String contentImgUrl;
