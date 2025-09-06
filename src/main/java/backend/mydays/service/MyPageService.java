@@ -1,34 +1,27 @@
 package backend.mydays.service;
 
-import backend.mydays.domain.Challenge;
-import backend.mydays.domain.Post;
-import backend.mydays.domain.Title;
-import backend.mydays.domain.UserChallenge;
-import backend.mydays.domain.Users;
+import backend.mydays.domain.*;
 import backend.mydays.dto.comment.CommentDto;
 import backend.mydays.dto.mypage.*;
 import backend.mydays.dto.post.CalendarPostDetailResponseWrapperDto;
 import backend.mydays.dto.post.FeedPostDto;
 import backend.mydays.dto.post.MissionDateDto;
-import backend.mydays.dto.post.MissionTextDto;
 import backend.mydays.dto.post.PostDetailResponseWrapperDto;
 import backend.mydays.exception.ForbiddenException;
 import backend.mydays.exception.ResourceNotFoundException;
-import backend.mydays.repository.ChallengeRepository;
-import backend.mydays.repository.PostRepository;
-import backend.mydays.repository.TitleRepository;
-import backend.mydays.repository.UserChallengeRepository;
-import backend.mydays.repository.UserRepository;
-import backend.mydays.repository.UserTitleRepository;
-import java.util.Locale;
+import backend.mydays.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,7 +33,7 @@ public class MyPageService {
     private final UserChallengeRepository userChallengeRepository;
     private final UserTitleRepository userTitleRepository;
     private final TitleRepository titleRepository;
-    private final PostService postService; // Inject PostService
+    private final PostService postService;
     private final ChallengeRepository challengeRepository;
     private final PostRepository postRepository;
 
@@ -48,13 +41,12 @@ public class MyPageService {
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
-        // Placeholder values for new fields
-        String growthMessage = "오늘도 성장 중이에요!"; // Placeholder
-        boolean isBubbleVisible = true; // Placeholder
-        double progress = 0.5; // Placeholder
-        int totalChallengeCount = 42; // Placeholder
-        int daysCount = 7; // Placeholder
-        boolean isCompleteMission = false; // Placeholder
+        String growthMessage = "오늘도 성장 중이에요!";
+        boolean isBubbleVisible = true;
+        double progress = 0.5;
+        int totalChallengeCount = 42;
+        int daysCount = 7;
+        boolean isCompleteMission = false;
 
         String userTitle = user.getActiveTitle() != null ? user.getActiveTitle().getName() : "";
         String userTitleColor = user.getActiveTitle() != null ? user.getActiveTitle().getColor() : "#000000";
@@ -66,7 +58,7 @@ public class MyPageService {
                 userTitle,
                 userTitleColor,
                 progress,
-                user.getAvatarImageUrl(), // This is now from Character
+                user.getAvatarImageUrl(),
                 totalChallengeCount,
                 daysCount,
                 isCompleteMission
@@ -93,6 +85,76 @@ public class MyPageService {
         return new MyCalendarResponseDto(user.getCreatedAt(), calendarPosts);
     }
 
+    public WeeklyCalendarResponseDto getWeeklyCalendar(UserDetails userDetails) {
+        Users user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", userDetails.getUsername()));
+
+        LocalDate today = LocalDate.now();
+        LocalDate sunday = today.with(DayOfWeek.SUNDAY);
+
+        List<DayContentDto> dayContents = new ArrayList<>();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M월 d일 E요일", Locale.KOREAN);
+
+        for (LocalDate date = sunday; !date.isAfter(today); date = date.plusDays(1)) {
+            final LocalDate currentDate = date;
+            Challenge challenge = challengeRepository.findByChallengeDate(currentDate)
+                    .orElse(null);
+
+            if (challenge == null) {
+                dayContents.add(DayContentDto.builder()
+                        .day(currentDate.getDayOfMonth())
+                        .date(currentDate.format(dateFormatter))
+                        .missionText("오늘의 챌린지가 없습니다.")
+                        .isCompleted(false)
+                        .post(null)
+                        .build());
+                continue;
+            }
+
+            UserChallenge userChallenge = userChallengeRepository.findByUserAndChallenge(user, challenge)
+                    .orElse(null);
+
+            DayContentDto dayContent;
+            if (userChallenge != null) {
+                Post post = userChallenge.getPost();
+                WeeklyCalendarPostDto postDto = WeeklyCalendarPostDto.builder()
+                        .postId(String.valueOf(post.getId()))
+                        .userimgUrl(post.getUser().getAvatarImageUrl())
+                        .userName(post.getUser().getNickname())
+                        .userTitle(post.getUser().getActiveTitle() != null ? post.getUser().getActiveTitle().getName() : "")
+                        .userTitleColor(post.getUser().getActiveTitle() != null ? post.getUser().getActiveTitle().getColor() : "#FFFFFF")
+                        .createdAt(post.getCreatedAt())
+                        .content(post.getContent())
+                        .contentImgUrl(post.getImageUrl())
+                        .likeCount(post.getLikes().size())
+                        .isLiked(post.getLikes().stream().anyMatch(like -> like.getUser().equals(user)))
+                        .commentCount(post.getComments().size())
+                        .build();
+
+                dayContent = DayContentDto.builder()
+                        .day(currentDate.getDayOfMonth())
+                        .date(currentDate.format(dateFormatter))
+                        .missionText(challenge.getContent())
+                        .isCompleted(true)
+                        .post(postDto)
+                        .build();
+            } else {
+                dayContent = DayContentDto.builder()
+                        .day(currentDate.getDayOfMonth())
+                        .date(currentDate.format(dateFormatter))
+                        .missionText(challenge.getContent())
+                        .isCompleted(false)
+                        .post(null)
+                        .build();
+            }
+            dayContents.add(dayContent);
+        }
+
+        return WeeklyCalendarResponseDto.builder()
+                .dayContents(dayContents)
+                .build();
+    }
+
     public MyCalendarResponseDto getAllMyChallenges(String userEmail) {
         Users user = userRepository.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
@@ -113,7 +175,6 @@ public class MyPageService {
         Users user = userRepository.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
-        // 사용자가 해당 postId를 수행한 챌린지인지 확인 (권한 체크)
         boolean isUserChallenge = userChallengeRepository.existsByUserAndPostId(user, postId);
         if (!isUserChallenge) {
             throw new ResourceNotFoundException("Post", "id", postId);
@@ -129,7 +190,6 @@ public class MyPageService {
             .orElseThrow(() -> new IllegalStateException("오늘의 챌린지를 찾을 수 없습니다."));
 
         LocalDate date = challenge.getChallengeDate();
-        // "M월 d일 E요일" 포맷 정의, Locale.KOREAN으로 요일 한글 표시
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M월 d일 E요일", Locale.KOREAN);
         String formattedDate = date.format(formatter);
 
@@ -141,7 +201,6 @@ public class MyPageService {
         Users user = userRepository.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
 
-        // 사용자가 해당 postId를 수행한 챌린지인지 확인 (권한 체크)
         boolean isUserChallenge = userChallengeRepository.existsByUserAndPostId(user, postId);
         if (!isUserChallenge) {
             throw new ResourceNotFoundException("Post", "id", postId);
