@@ -45,7 +45,7 @@ public class MyPageService {
 
         String growthMessage = "오늘도 성장 중이에요!";
         boolean isBubbleVisible = true;
-        double progress = 0.5;
+        double progress = 0.7;
         // totalChallengeCount: 유저가 작성한 전체 포스트 수
         int totalChallengeCount =  postRepository.countByUser(user);
 
